@@ -30,7 +30,6 @@ function App() {
     play,
     pause,
     resume,
-    stop,
     next,
     previous,
     seek
@@ -66,13 +65,25 @@ function App() {
     play(currentIndex);
   };
 
+  const handleTogglePlayPause = () => {
+    if (playerState === 'playing') {
+      pause();
+      return;
+    }
+
+    if (playerState === 'paused') {
+      resume();
+      return;
+    }
+
+    handleStart();
+  };
+
   return (
     <div className="app-shell">
       <div className="background-glow" aria-hidden="true" />
 
       <main className="app-layout">
-        <FileLoader fileName={fileName} onFileSelected={handleFileSelected} />
-
         <ReaderScreen chunk={currentChunk} playerState={playerState} />
 
         <ProgressBar currentIndex={currentIndex} total={chunks.length} onSeek={seek} />
@@ -80,10 +91,7 @@ function App() {
         <Controls
           disabled={chunks.length === 0}
           playerState={playerState}
-          onPlay={handleStart}
-          onPause={pause}
-          onResume={resume}
-          onStop={stop}
+          onTogglePlayPause={handleTogglePlayPause}
           onNext={next}
           onPrevious={previous}
         />
@@ -102,6 +110,8 @@ function App() {
             {error && <p className="error-text">{error}</p>}
           </section>
         )}
+
+        <FileLoader fileName={fileName} onFileSelected={handleFileSelected} />
       </main>
     </div>
   );

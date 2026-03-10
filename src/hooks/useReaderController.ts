@@ -44,6 +44,10 @@ export function useReaderController(chunks: Chunk[], wpm: number) {
     }
   }, [chunks, currentIndex]);
 
+  useEffect(() => {
+    playerRef.current?.refresh();
+  }, [wpm]);
+
   return {
     currentIndex,
     playerState,
@@ -51,8 +55,10 @@ export function useReaderController(chunks: Chunk[], wpm: number) {
     pause: () => playerRef.current?.pause(),
     resume: () => playerRef.current?.resume(),
     stop: () => playerRef.current?.stop(),
-    next: () => playerRef.current?.next(),
-    previous: () => playerRef.current?.previous(),
+    next: (step = 1) =>
+      step === 1 ? playerRef.current?.next() : playerRef.current?.nextBy(step),
+    previous: (step = 1) =>
+      step === 1 ? playerRef.current?.previous() : playerRef.current?.previousBy(step),
     seek: (index: number) => playerRef.current?.seek(index)
   };
 }

@@ -3,47 +3,42 @@ import type { PlayerState } from '../domain/types';
 interface ControlsProps {
   disabled: boolean;
   playerState: PlayerState;
-  onPlay: () => void;
-  onPause: () => void;
-  onResume: () => void;
-  onStop: () => void;
-  onNext: () => void;
-  onPrevious: () => void;
+  onTogglePlayPause: () => void;
+  onNext: (step?: number) => void;
+  onPrevious: (step?: number) => void;
 }
 
 export function Controls({
   disabled,
   playerState,
-  onPlay,
-  onPause,
-  onResume,
-  onStop,
+  onTogglePlayPause,
   onNext,
   onPrevious
 }: ControlsProps) {
-  const canPlay = !disabled && (playerState === 'idle' || playerState === 'stopped');
-  const canResume = !disabled && playerState === 'paused';
-  const canPause = !disabled && playerState === 'playing';
+  const isPlaying = playerState === 'playing';
+  const playPauseLabel = isPlaying ? 'Pause' : 'Play';
 
   return (
     <section className="panel controls-panel">
-      <button className="button" type="button" onClick={onPrevious} disabled={disabled}>
-        Previous
+      <button className="button" type="button" onClick={() => onPrevious(10)} disabled={disabled}>
+        Prev -10
       </button>
-      <button className="button button-primary" type="button" onClick={onPlay} disabled={!canPlay}>
-        Play
+      <button className="button" type="button" onClick={() => onPrevious(1)} disabled={disabled}>
+        Prev -1
       </button>
-      <button className="button" type="button" onClick={onPause} disabled={!canPause}>
-        Pause
+      <button
+        className="button button-primary"
+        type="button"
+        onClick={onTogglePlayPause}
+        disabled={disabled}
+      >
+        {playPauseLabel}
       </button>
-      <button className="button" type="button" onClick={onResume} disabled={!canResume}>
-        Resume
+      <button className="button" type="button" onClick={() => onNext(1)} disabled={disabled}>
+        Next +1
       </button>
-      <button className="button" type="button" onClick={onStop} disabled={disabled}>
-        Stop
-      </button>
-      <button className="button" type="button" onClick={onNext} disabled={disabled}>
-        Next
+      <button className="button" type="button" onClick={() => onNext(10)} disabled={disabled}>
+        Next +10
       </button>
     </section>
   );

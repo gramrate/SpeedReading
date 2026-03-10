@@ -7,6 +7,10 @@ export interface ReaderPlayerCallbacks {
   onStateChange: (state: PlayerState) => void;
 }
 
+const SPEED_CALIBRATION = 0.62;
+const MIN_CHUNK_DURATION = 45;
+const MAX_PAUSE_MULTIPLIER = 1.55;
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
@@ -14,8 +18,9 @@ function clamp(value: number, min: number, max: number): number {
 export function calculateChunkDuration(chunk: Chunk, wpm: number): number {
   const safeWpm = Math.max(wpm, 60);
   const wordsCount = Math.max(chunk.words.length, 1);
-  const baseDuration = (wordsCount / safeWpm) * 60_000;
-  return Math.max(baseDuration * chunk.pauseMultiplier, 180);
+  const pauseMultiplier = Math.min(chunk.pauseMultiplier, MAX_PAUSE_MULTIPLIER);
+  const baseDuration = (wordsCount / safeWpm) * 60_000 * SPEED_CALIBRATION;
+  return Math.max(baseDuration * pauseMultiplier, MIN_CHUNK_DURATION);
 }
 
 export class ReaderPlayer {
@@ -82,22 +87,31 @@ export class ReaderPlayer {
   }
 
   next(): void {
-    const chunks = this.callbacks.getChunks();
-    if (chunks.length === 0) {
-      return;
-    }
+    this.step(1);
+  }
 
-    this.pendingStop = false;
-    this.clearTimer();
-    this.index = clamp(this.index + 1, 0, chunks.length - 1);
-    this.emitIndex();
-
-    if (this.state === 'playing') {
-      this.scheduleCurrentChunk();
-    }
+  nextBy(step: number): void {
+    this.step(Math.max(step, 1));
   }
 
   previous(): void {
+    this.step(-1);
+  }
+
+  previousBy(step: number): void {
+    this.step(-Math.max(step, 1));
+  }
+
+  refresh(): void {
+    if (this.state !== 'playing') {
+      return;
+    }
+
+    this.clearTimer();
+    this.scheduleCurrentChunk();
+  }
+
+  private step(delta: number): void {
     const chunks = this.callbacks.getChunks();
     if (chunks.length === 0) {
       return;
@@ -105,7 +119,7 @@ export class ReaderPlayer {
 
     this.pendingStop = false;
     this.clearTimer();
-    this.index = clamp(this.index - 1, 0, chunks.length - 1);
+    this.index = clamp(this.index + delta, 0, chunks.length - 1);
     this.emitIndex();
 
     if (this.state === 'playing') {
